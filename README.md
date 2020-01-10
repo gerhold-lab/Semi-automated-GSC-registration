@@ -1,8 +1,8 @@
 # Semi-automated registration of GSC (in 5 minutes)
-This document describes the steps to register time-lapse movies of *C. elegans* germline. 
+This document describes the steps to register time-lapse movies of *C. elegans* germline.
 
 #### Materials
-- a time-lapse tiff movie (only the TBB-2::GFP channel is required). 
+- a time-lapse tiff movie (only the TBB-2::GFP channel is required).
 
 
 ### 1 Generate a low resolution movie
@@ -13,7 +13,7 @@ This step is optional but highly recommended to speed up the registration proces
 3. Click "OK".
 4. Save the low resolution tiff with a different name.
 
-![Figure 1](./figures/Figure 1.png)
+![Figure 1](https://github.com/yifnzhao/Semi-automated-GSC-registration/blob/master/figures/Figure%201.png)
 
 ### 2 ROI (The only manual step)
 1. With your low-res tiff opened in Fiji, go to Image>>Stacks>>Z project.. Select max intensity and "OK".
@@ -26,8 +26,8 @@ times to identify such a pair. But it gets very easy with a little practice.
 
 Important Note: the selection of the congressing centrosome pair is essential. It is ok if the selected pair disappears in the middle of the movie. In that case, you need to save the current ROI result, go to one time point back, and find another prominently congressing pair. The remaining steps are identical.
 
-![Figure 2](./figures/Figure 2.png)
-![Figure 3](./figures/Figure 3.png)
+![Figure 2](https://github.com/yifnzhao/Semi-automated-GSC-registration/blob/master/figures/Figure%202.png)
+![Figure 3](https://github.com/yifnzhao/Semi-automated-GSC-registration/blob/master/figures/Figure%203.png)
 
 
 ### 3 Generate the transformation matrix
@@ -37,5 +37,5 @@ Important Note: the selection of the congressing centrosome pair is essential. I
 
 Note: a good way to check is to do a double z-projection (the second projection is actually on t, not z). Ideally, the output image should look like Figure 4A, not 4B).
 
-![Figure 4A](./figures/Figure 4A.png)
-![Figure 4B](./figures/Figure 4B.png)
+![Figure 4A](https://github.com/yifnzhao/Semi-automated-GSC-registration/blob/master/figures/Figure%204A.png)
+![Figure 4B](https://github.com/yifnzhao/Semi-automated-GSC-registration/blob/master/figures/Figure%204B.png)
