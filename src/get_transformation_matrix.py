@@ -68,12 +68,14 @@ if __name__ == "__main__":
     ROI = pd.read_csv("ROI.csv", header=None)
     gt_translation_matrix = gt_transform_matrix(ROI)
     
-    # --- step 2: get ground truth tiff ---
+    # --- step 2: get ground truth tiff (low res) ---
     tiff_path = 'low_res.tif'
     im_in = tifffile.imread(tiff_path)
     im_out = translate(im_in, gt_translation_matrix)
     with tifffile.TiffWriter('GT_low_res.tif', bigtiff=True) as tif:
         for i in range(im_out.shape[0]):
             tif.save(im_out[i], compress = 6)
+    # --- step 3: register high res tiff using the same matrix ---
+    # same as step 2, change the tiff_path to the high res one 
     
     
