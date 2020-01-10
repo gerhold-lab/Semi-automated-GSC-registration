@@ -2,8 +2,7 @@
 This document describes the steps to register time-lapse movies of *C. elegans* germline. 
 
 #### Materials
-- Time-lapse tiff movie (only the TBB-2::GFP channel is required). 
-- TrackMate-derived spots csv. This file can be generated using *batchMeasureIntensity.ijm* and *merge_and_filter.py*. I will write a separate text about this proprocessing step if needed. 
+- a time-lapse tiff movie (only the TBB-2::GFP channel is required). 
 
 
 ### 1 Generate a low resolution movie
@@ -27,8 +26,8 @@ times to identify such a pair. But it gets very easy with a little practice.
 
 Important Note: the selection of the congressing centrosome pair is essential. It is ok if the selected pair disappears in the middle of the movie. In that case, you need to save the current ROI result, go to one time point back, and find another prominently congressing pair. The remaining steps are identical.
 
-  ![Figure 2](./figures/Figure 2.png)
-  ![Figure 3](./figures/Figure 3.png)
+![Figure 2](./figures/Figure 2.png)
+![Figure 3](./figures/Figure 3.png)
 
 
 ### 3 Generate the transformation matrix
@@ -36,7 +35,7 @@ Important Note: the selection of the congressing centrosome pair is essential. I
 2. Open the registered low-res tiff. It is now a 2D stack. Go to Image>>Hyperstacks>>stack to hyperstack. In the popup window, enter the number of Slices and Frames of your original movie.
 3. If the movie doesn't look alright, try to the time points that looks strange. You can either directly approximate and fix the number in the csv file, or redo the ROI step if necessary. If the low-res movie looks alright, you can run register.py. This script generates a registered high-res tiff.
 
-  Note: a good way to check is to do a double z-projection (the second projection is actually on t, not z). Ideally, the output image should look like Figure 4A, not 4B).
-  
-  ![Figure 4A](./figures/Figure 4A.png)
-  ![Figure 4B](./figures/Figure 4B.png)
+Note: a good way to check is to do a double z-projection (the second projection is actually on t, not z). Ideally, the output image should look like Figure 4A, not 4B).
+
+![Figure 4A](./figures/Figure 4A.png)
+![Figure 4B](./figures/Figure 4B.png)
