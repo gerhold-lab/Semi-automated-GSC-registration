@@ -60,6 +60,12 @@ def translate(im_in, translation):
     
                         
     return im_out
+def combine_roi(mat1, mat2):
+    last_x, last_y = mat1[-1]
+    mat2 =  [(a+last_x, b+last_y) for a, b in mat2 ]
+    mat = mat1 + mat2
+    return mat
+    
 
 if __name__ == "__main__":
     # example usage
