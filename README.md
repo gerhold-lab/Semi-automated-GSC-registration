@@ -24,9 +24,9 @@ times to identify such a pair. But it gets very easy with a little practice.
 6. Go to the next time point. If the metaphase plate position changes, move your line accordingly using "->" or "<-" on your keyboard. Enter "t" to add the line. Repeat this step until the last time point is reached.
 7. In the ROI Manager, check "Show All". You should see something similar to Figure 3. Go to "More>>List", and save the x, y coordinates as a csv file.
 
-Important Note: the selection of the congressing centrosome pair is essential. It is ok if the selected pair disappears in the middle of the movie. In that case, you need to save the current ROI result, go to one time point back, and find another prominently congressing pair. The remaining steps are identical.
+**Important Note**: the selection of the congressing centrosome pair is essential. It is ok if the selected pair disappears in the middle of the movie. In that case, you need to save the current ROI result, go to one time point back, and find another prominently congressing pair. The remaining steps are identical.
 
-**TODO**: implement this.
+**TODO**: implement this using the combine_roi function.
 
 ![Figure 2](https://github.com/yifnzhao/Semi-automated-GSC-registration/blob/master/figures/Figure%202.png)
 ![Figure 3](https://github.com/yifnzhao/Semi-automated-GSC-registration/blob/master/figures/Figure%203.png)
@@ -35,9 +35,9 @@ Important Note: the selection of the congressing centrosome pair is essential. I
 ### 3 Generate the transformation matrix
 1. Now you have your ROI csv and low-res tiff ready. With your favorite python IDE open, run get_transformation_matrix.py, input the file names when prompted and wait.
 2. Open the registered low-res tiff. It is now a 2D stack. Go to Image>>Hyperstacks>>stack to hyperstack. In the popup window, enter the number of Slices and Frames of your original movie.
-3. If the movie doesn't look alright, try to the time points that looks strange. You can either directly approximate and fix the number in the csv file, or redo the ROI step if necessary. If the low-res movie looks alright, you can use the same matrix to register the high-res movie. (**TODO**: write a separate script for this?)
+3. If the movie doesn't look alright, check the time points that looks strange. You can either directly approximate and fix the number in the csv file, or redo the ROI step if necessary. If the low-res movie looks alright, you can use the same matrix to register the high-res movie. (**TODO**: write a separate script for this?)
 
-Note: a good way to check is to do a double z-projection (the second projection is actually on t, not z). Ideally, the output image should look like Figure 4A, not 4B).
+Note: a good way to check is to do a double z-projection (the second projection is actually on t, not z). Ideally, the output image should look like the upper panel, Figure 4A, not lower panel, Figure 4B).
 
 ![Figure 4A](https://github.com/yifnzhao/Semi-automated-GSC-registration/blob/master/figures/Figure%204A.png)
 ![Figure 4B](https://github.com/yifnzhao/Semi-automated-GSC-registration/blob/master/figures/Figure%204B.png)
