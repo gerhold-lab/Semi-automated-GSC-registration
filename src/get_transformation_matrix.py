@@ -13,7 +13,7 @@ from skimage.external import tifffile
 
 
 def gt_transform_matrix(roi_df):
-    scale = 1
+    scale = 3 #1 for lowres. 3 for high res
     x = roi_df.iloc[:,0]
     y = roi_df.iloc[:,1]
     translation =[(0,0)]
@@ -63,19 +63,28 @@ def translate(im_in, translation):
 
 if __name__ == "__main__":
     # example usage
-    os.chdir("../data/")
+#    os.chdir("../data/")
+    os.chdir("/Users/yifan/Dropbox/ZYF/cpv2/registration data/180116/")
     # --- step 1: get transformation matrix (2D) ---
-    ROI = pd.read_csv("ROI.csv", header=None)
-    gt_translation_matrix = gt_transform_matrix(ROI)
+    ROI = pd.read_csv("1-1.csv", header=None)
+    gt_translation_matrix1 = gt_transform_matrix(ROI)
+    ROI = pd.read_csv("2-2.csv", header=None)
+    gt_translation_matrix2 = gt_transform_matrix(ROI)
+    gt_translation_matrix = gt_translation_matrix1+gt_translation_matrix2
     
     # --- step 2: get ground truth tiff (low res) ---
-    tiff_path = 'low_res.tif'
+    tiff_path = 'low-res.tif'
     im_in = tifffile.imread(tiff_path)
     im_out = translate(im_in, gt_translation_matrix)
     with tifffile.TiffWriter('GT_low_res.tif', bigtiff=True) as tif:
         for i in range(im_out.shape[0]):
             tif.save(im_out[i], compress = 6)
     # --- step 3: register high res tiff using the same matrix ---
-    # same as step 2, change the tiff_path to the high res one 
-    
+#    tiff_path = 'C2-2018-07-16_GSC_L4_L4440_RNAi_T0.tif'
+#    im_in = tifffile.imread(tiff_path)
+#    im_out = translate(im_in, gt_translation_matrix)
+#    with tifffile.TiffWriter('GT_high_res-2.tif', bigtiff=True) as tif:
+#        for i in range(im_out.shape[0]):
+#            tif.save(im_out[i], compress = 6)
+#    
     
