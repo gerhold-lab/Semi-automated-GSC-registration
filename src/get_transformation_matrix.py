@@ -29,7 +29,7 @@ def gt_transform_matrix(roi_df):
     return translation
 
 
-def translate(im_in, translation):
+def translate(im_in, translation, highres = False, compress = 3):
     '''
     input: 
         im_in: input tiff
@@ -40,6 +40,12 @@ def translate(im_in, translation):
     tifffile documentation: https://scikit-image.org/docs/0.12.x/api/skimage.external.tifffile.html
 
     '''
+   
+    # scalar multiply the translation matrix for high-res
+    if highres == True:
+        translation = numpy.array(translation) * compress
+    
+    
     n_frame, n_zstep, y_dim, x_dim = im_in.shape
     # create empty tiff
     im_out = numpy.zeros(im_in.shape)
@@ -60,6 +66,8 @@ def translate(im_in, translation):
     
                         
     return im_out
+
+
 def combine_roi(mat1, mat2):
     last_x, last_y = mat1[-1]
     mat2 =  [(a+last_x, b+last_y) for a, b in mat2 ]
@@ -69,21 +77,24 @@ def combine_roi(mat1, mat2):
 
 if __name__ == "__main__":
     # example usage
-#    os.chdir("../data/")
-    os.chdir("/Users/yifan/Dropbox/ZYF/cpv2/registration data/180116/")
+    os.chdir("../data/")
+
     # --- step 1: get transformation matrix (2D) ---
-    ROI = pd.read_csv("1-1.csv", header=None)
-    gt_translation_matrix1 = gt_transform_matrix(ROI)
-    ROI = pd.read_csv("2-2.csv", header=None)
-    gt_translation_matrix2 = gt_transform_matrix(ROI)
-    gt_translation_matrix = gt_translation_matrix1+gt_translation_matrix2
-    
-    # --- step 2: get ground truth tiff (low res) ---
-    tiff_path = 'low-res.tif'
+    ROI = pd.read_csv("ROI.csv", header=None)
+    gt_matrix = gt_transform_matrix(ROI)
+
+#    # --- step 2: get ground truth tiff (low res) ---
+#    tiff_path = 'low_res.tif'
+#    im_in = tifffile.imread(tiff_path)
+#    im_out = translate(im_in, gt_matrix)
+#    with tifffile.TiffWriter('GT' + tiff_path, bigtiff=True) as tif:
+#        for i in range(im_out.shape[0]):
+#            tif.save(im_out[i], compress = 6)
+
+    # --- step 3: get ground truth tiff (high res) ---
+    tiff_path = 'C2-2018-07-16_GSC_L4_L4440_RNAi_T0.tif'
     im_in = tifffile.imread(tiff_path)
-    im_out = translate(im_in, gt_translation_matrix)
-    with tifffile.TiffWriter('GT_low_res.tif', bigtiff=True) as tif:
+    im_out = translate(im_in, gt_matrix, highres = True, compress = 3)
+    with tifffile.TiffWriter('GT' + tiff_path, bigtiff=True) as tif:
         for i in range(im_out.shape[0]):
             tif.save(im_out[i], compress = 6)
-    
-    
