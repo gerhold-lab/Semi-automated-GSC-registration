@@ -26,7 +26,6 @@ times to identify such a pair. But it gets very easy with a little practice.
 
 **Important Note**: the selection of the congressing centrosome pair is essential. It is ok if the selected pair disappears in the middle of the movie. In that case, you need to save the current ROI result, go to one time point back, and find another prominently congressing pair. The remaining steps are identical.
 
-**TODO**: implement this using the combine_roi function.
 
 ![Figure 2](https://github.com/yifnzhao/Semi-automated-GSC-registration/blob/master/figures/Figure%202.png)
 ![Figure 3](https://github.com/yifnzhao/Semi-automated-GSC-registration/blob/master/figures/Figure%203.png)
@@ -35,8 +34,15 @@ times to identify such a pair. But it gets very easy with a little practice.
 ### 3 Generate the transformation matrix
 1. Now you have your ROI csv and low-res tiff ready. With your favorite python IDE open, run get_transformation_matrix.py, input the file names when prompted and wait.
 2. Open the registered low-res tiff. It is now a 2D stack. Go to Image>>Hyperstacks>>stack to hyperstack. In the popup window, enter the number of Slices and Frames of your original movie.
-3. If the movie doesn't look alright, check the time points that looks strange. You can either directly approximate and fix the number in the csv file, or redo the ROI step if necessary. If the low-res movie looks alright, you can use the same matrix to register the high-res movie. (**TODO**: write a separate script for this?)
+3. If the movie doesn't look alright, check the time points that looks strange. You can either directly approximate and fix the number in the csv file, or redo the ROI step if necessary. If the low-res movie looks alright, you can use the same matrix to register the high-res movie. 
 
+#### Now, what function does the whole registration thing?
+1. ```gt_transform_matrix(roi_df)``` reads your x-y coodinate input (i.e. the ROI csv) and returns a translation matrix.
+2. ```combine_roi(mat1, mat2)``` is optional -- it combines the translation matrices in cases where you have multiple csv files for distinct centrosome pairs (see Part 2 Important Notes).
+3. ```translate(im_in, translation, highres = False, compress = 3)``` this one translates your movie! 
+  - If you did step 0 and used 3 fold compressed low-res movie for ROI generation, to register a low-res movie, ```image_out = translate(image_in, translation_matrix)``` will work; to register a high-res movie, ```image_out = translate(image_in, translation_matrix, highres = True, compress = 3)``` (i.e., you must specify ```highres = True```).
+  - If you did something differently, just remember to specify ```highres``` and ```compress```. Basically, the algorithm multiplies your translation matrix by integer *compress* if boolean *highres* is True.
+  
 Note: a good way to check is to do a double z-projection (the second projection is actually on t, not z). Ideally, the output image should look like the upper panel, Figure 4A, not lower panel, Figure 4B).
 
 ![Figure 4A](https://github.com/yifnzhao/Semi-automated-GSC-registration/blob/master/figures/Figure%204A.png)
