@@ -60,6 +60,12 @@ def translate(im_in, translation):
     
                         
     return im_out
+def combine_roi(mat1, mat2):
+    last_x, last_y = mat1[-1]
+    mat2 =  [(a+last_x, b+last_y) for a, b in mat2 ]
+    mat = mat1 + mat2
+    return mat
+    
 
 if __name__ == "__main__":
     # example usage
@@ -79,12 +85,5 @@ if __name__ == "__main__":
     with tifffile.TiffWriter('GT_low_res.tif', bigtiff=True) as tif:
         for i in range(im_out.shape[0]):
             tif.save(im_out[i], compress = 6)
-    # --- step 3: register high res tiff using the same matrix ---
-#    tiff_path = 'C2-2018-07-16_GSC_L4_L4440_RNAi_T0.tif'
-#    im_in = tifffile.imread(tiff_path)
-#    im_out = translate(im_in, gt_translation_matrix)
-#    with tifffile.TiffWriter('GT_high_res-2.tif', bigtiff=True) as tif:
-#        for i in range(im_out.shape[0]):
-#            tif.save(im_out[i], compress = 6)
-#    
+    
     
