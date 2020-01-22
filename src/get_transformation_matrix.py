@@ -13,7 +13,7 @@ from skimage.external import tifffile
 
 
 def gt_transform_matrix(roi_df):
-#    scale = 3 #1 for lowres. 3 for high res
+#    scale = 3 #1 for lowres; 3 for high res
     x = roi_df.iloc[:,0]
     y = roi_df.iloc[:,1]
     translation =[(0,0)]
