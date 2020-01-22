@@ -13,7 +13,7 @@ from skimage.external import tifffile
 
 
 def gt_transform_matrix(roi_df):
-    scale = 3 #1 for lowres. 3 for high res
+#    scale = 3 #1 for lowres. 3 for high res
     x = roi_df.iloc[:,0]
     y = roi_df.iloc[:,1]
     translation =[(0,0)]
@@ -21,8 +21,8 @@ def gt_transform_matrix(roi_df):
     y0 = y[0]
     i = 1
     while i < len(x) :
-        diff_x = int(round((x[i] - x0)) * scale)
-        diff_y = int(round((y[i] - y0)) * scale)
+        diff_x = int(round((x[i] - x0)))
+        diff_y = int(round((y[i] - y0)))
         translation.append((diff_x, diff_y))        
         i+=1
     
@@ -49,7 +49,7 @@ def translate(im_in, translation, highres = False, compress = 3):
     n_frame, n_zstep, y_dim, x_dim = im_in.shape
     # create empty tiff
     im_out = numpy.zeros(im_in.shape)
-#    description = u'{"shape": %s}' % str(list(im_in.shape))  
+    
     for t in range(n_frame):      
         print("Start processing t = " + str(t))
         trans_x, trans_y = translation[t]
@@ -62,7 +62,7 @@ def translate(im_in, translation, highres = False, compress = 3):
                         continue
                     else:
                         im_out[t][z][y][x] = int(im_in[t][z][y+trans_y][x+trans_x])
-#                        im_out[t][z][y][x] = int(im_in[t][z][y][x+trans_x]) #no y translation
+
     
                         
     return im_out
@@ -87,7 +87,7 @@ if __name__ == "__main__":
 #    tiff_path = 'low_res.tif'
 #    im_in = tifffile.imread(tiff_path)
 #    im_out = translate(im_in, gt_matrix)
-#    with tifffile.TiffWriter('GT' + tiff_path, bigtiff=True) as tif:
+#    with tifffile.TiffWriter('GT-' + tiff_path, bigtiff=True) as tif:
 #        for i in range(im_out.shape[0]):
 #            tif.save(im_out[i], compress = 6)
 
@@ -95,6 +95,6 @@ if __name__ == "__main__":
     tiff_path = 'C2-2018-07-16_GSC_L4_L4440_RNAi_T0.tif'
     im_in = tifffile.imread(tiff_path)
     im_out = translate(im_in, gt_matrix, highres = True, compress = 3)
-    with tifffile.TiffWriter('GT' + tiff_path, bigtiff=True) as tif:
+    with tifffile.TiffWriter('GT-' + tiff_path, bigtiff=True) as tif:
         for i in range(im_out.shape[0]):
             tif.save(im_out[i], compress = 6)
