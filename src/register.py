@@ -90,10 +90,6 @@ def translate(im_in, translation, hi_res = False, compression = 3, padzeros = Tr
         x_diff, y_diff = x_dim_adj-x_dim, y_dim_adj-y_dim
         #create empty tiff
         im_out = numpy.zeros((n_frame, n_zstep, y_dim_adj, x_dim_adj))
-        print(x_low)
-        print(y_low)
-        print(y_high)
-        print(x_high)
         # translate
         for t in range(n_frame):
             if t%20 == 0:
