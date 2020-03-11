@@ -43,7 +43,6 @@ def translate(im_in, translation, hi_res = False, compression = 3, padzeros = Tr
         im_out: output tiff
     
     tifffile documentation: https://scikit-image.org/docs/0.12.x/api/skimage.external.tifffile.html
-
     '''
    
     # scalar multiply the translation matrix for high-res
@@ -86,20 +85,20 @@ def translate(im_in, translation, hi_res = False, compression = 3, padzeros = Tr
         
 
         x_high, x_low, y_high, y_low = int(x_high), int(x_low), int(y_high), int(y_low)
-        x_dim_adj, y_dim_adj = x_high - x_low, y_high - y_low
-        x_diff, y_diff = x_dim_adj-x_dim, y_dim_adj-y_dim
+        x_dim_adj, y_dim_adj = x_high-2*x_low, y_high - 2*y_low
+#        x_diff, y_diff = x_dim_adj-x_dim, y_dim_adj-y_dim #-1 for indexing
         #create empty tiff
         im_out = numpy.zeros((n_frame, n_zstep, y_dim_adj, x_dim_adj))
         # translate
         for t in range(n_frame):
             if t%20 == 0:
                 print("Start processing t = " + str(t))
+            if t>10: break
             trans_x, trans_y = translation[t]
             for z in range(n_zstep):
                 for y in range(y_dim):
                     for x in range(x_dim):
-                        
-                        im_out[t][z][y_diff+y-trans_y][x_diff+x-trans_x] = int(im_in[t][z][y][x])
+                        im_out[t][z][y-trans_y-y_low][x-trans_x-x_low] = int(im_in[t][z][y][x])
                         
     return im_out
 
@@ -133,7 +132,6 @@ def register(tiff_path, trans_mat, highres = False, compress = 3, pad = True):
         for i in range(im_out.shape[0]):
             tif.save(im_out[i])
     return tif_tags
-
 
 
 if __name__ == "__main__":
