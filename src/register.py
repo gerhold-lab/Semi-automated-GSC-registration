@@ -93,7 +93,7 @@ def translate(im_in, translation, hi_res = False, compression = 3, padzeros = Tr
         for t in range(n_frame):
             if t%20 == 0:
                 print("Start processing t = " + str(t))
-            if t>10: break
+#             if t>10: break
             trans_x, trans_y = translation[t]
             for z in range(n_zstep):
                 for y in range(y_dim):
