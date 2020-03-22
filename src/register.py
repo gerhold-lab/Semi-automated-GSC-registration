@@ -29,7 +29,8 @@ def roi2mat(roi_df):
 
 def combine_roi(mat1, mat2):
     last_x, last_y = mat1[-1]
-    mat2 =  [(a+last_x, b+last_y) for a, b in mat2 ]
+    mat2 = [(a+last_x, b+last_y) for a, b in mat2 ]
+    mat2 = mat2[1:]
     mat = mat1 + mat2
     return mat
     
@@ -128,22 +129,35 @@ def register(tiff_path, trans_mat, highres = False, compress = 3, pad = True):
     im_out = im_out.astype('uint16')
     
     # save registered tiff, no compression
-    with tifffile.TiffWriter("reg_" + tiff_path, bigtiff = highres) as tif:
+    with tifffile.TiffWriter("r_" + tiff_path, bigtiff = highres) as tif:
         for i in range(im_out.shape[0]):
             tif.save(im_out[i])
     return tif_tags
 
 
+def combine(n_csv = 2):
+    mat = pd.read_csv("1.csv", header = None)
+    mat = roi2mat(mat)
+    counter = 2
+    while counter<=n_csv:
+        nextMat = pd.read_csv(str(counter) + ".csv", header = None)
+        nextMat = roi2mat(nextMat)
+        mat = combine_roi(mat, nextMat)
+        counter+=1
+    return mat
+
 if __name__ == "__main__":
     
     # example usage
-    os.chdir("../data/")
+    os.chdir("../data/C2-20191028_test3_25C_s1/")
 
     # --- step 1: get transformation matrix (2D) ---
-    ROI = pd.read_csv("ROI.csv", header = None)
-    trans_mat = roi2mat(ROI)
-    
-    # --- step 2: get ground truth tiff (low res) ---
+    # if mutiple files, for example, 4 csv, run:
+    trans_mat = combine(n_csv = 4)
+    # if single file, run
+#     ROI = pd.read_csv("ROI.csv", header = None)
+#     trans_mat = roi2mat(ROI)
+#    # --- step 2: get ground truth tiff (low res) ---
     tiff_path = 'low_res.tif'
     metadata = register(tiff_path, trans_mat)
     
@@ -152,7 +166,3 @@ if __name__ == "__main__":
     metadata = register(tiff_path, trans_mat, highres = True, compress = 3)
     
     
-    
-    
-    
-
