@@ -75,26 +75,24 @@ def translate(im_in, translation, hi_res = False, compression = 3, padzeros = Tr
         y_low, y_high  = 0, y_dim
         for t in range(n_frame): 
             trans_x, trans_y = translation[t]
-            if trans_y < y_low:
-                y_low = trans_y
-            if y_dim+trans_y > y_high:
-                    y_high = y_dim+trans_y
-            if trans_x < x_low:
-                x_low = trans_x
-            if x_dim+trans_x > x_high:
-                    x_high = x_dim+trans_x
+            if -trans_y < y_low:
+                y_low = -trans_y
+            if y_dim-trans_y > y_high:
+                    y_high = y_dim-trans_y
+            if -trans_x < x_low:
+                x_low = -trans_x
+            if x_dim-trans_x > x_high:
+                    x_high = x_dim-trans_x
         
 
         x_high, x_low, y_high, y_low = int(x_high), int(x_low), int(y_high), int(y_low)
-        x_dim_adj, y_dim_adj = x_high-2*x_low, y_high - 2*y_low
-#        x_diff, y_diff = x_dim_adj-x_dim, y_dim_adj-y_dim #-1 for indexing
+        x_dim_adj, y_dim_adj = x_high-x_low, y_high-y_low
         #create empty tiff
         im_out = numpy.zeros((n_frame, n_zstep, y_dim_adj, x_dim_adj))
         # translate
         for t in range(n_frame):
             if t%20 == 0:
                 print("Start processing t = " + str(t))
-#             if t>10: break
             trans_x, trans_y = translation[t]
             for z in range(n_zstep):
                 for y in range(y_dim):
@@ -145,6 +143,7 @@ def combine(n_csv = 2):
         mat = combine_roi(mat, nextMat)
         counter+=1
     return mat
+
 
 if __name__ == "__main__":
     
