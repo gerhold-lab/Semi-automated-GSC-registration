@@ -144,6 +144,13 @@ def combine(n_csv = 2):
         counter+=1
     return mat
 
+def super_register(folder, n_roi, high_res = True, compress = 3):
+    os.chdir(folder)
+    trans_mat = combine(n_csv = n_roi)
+    tiff_path = 'u_germline.tif'
+    metadata = register(tiff_path, trans_mat, highres = high_res, compress = compress)
+    return metadata   
+    
 
 if __name__ == "__main__":
     
