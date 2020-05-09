@@ -35,7 +35,7 @@ def combine_roi(mat1, mat2):
     return mat
     
 
-def translate(im_in, translation, hi_res = False, compression = 3, padzeros = True):
+def translate(im_in,translation,hi_res=False,compression=3,padzeros = True):
     '''
     input: 
         im_in: input tiff
@@ -49,26 +49,45 @@ def translate(im_in, translation, hi_res = False, compression = 3, padzeros = Tr
     # scalar multiply the translation matrix for high-res
     if hi_res == True:
         translation = numpy.array(translation) * compression
-    
     translation = numpy.array(translation).astype(int)
-    n_frame, n_zstep, y_dim, x_dim = im_in.shape
+    
+    n_channel = 1
+    if len(im_in.shape) == 5:
+        # multiple channel
+        n_frame, n_zstep, n_channel, y_dim, x_dim = im_in.shape
+    else:
+        # single channel
+        n_frame, n_zstep, y_dim, x_dim = im_in.shape
         
     if padzeros == False:       
         # create empty tiff
         im_out = numpy.zeros(im_in.shape)                    
         for t in range(n_frame): 
-            if t%20 == 0:
+            if t%10 == 0:
                 print("Start processing t = " + str(t))
             trans_x, trans_y = translation[t]
             for z in range(n_zstep):
-                for y in range(y_dim):
-                    for x in range(x_dim):
-                        if (x+trans_x < 0) or (y+trans_y < 0):
-                            continue
-                        elif (x+trans_x >= x_dim) or (y+trans_y >= y_dim):
-                            continue
-                        else:
-                            im_out[t][z][y][x] = im_in[t][z][y+trans_y][x+trans_x]
+                if n_channel == 1:
+                    for y in range(y_dim):
+                        for x in range(x_dim):
+                            if (x+trans_x < 0) or (y+trans_y < 0):
+                                continue
+                            elif (x+trans_x >= x_dim) or (y+trans_y >= y_dim):
+                                continue
+                            else:
+                                im_out[t][z][y][x] = im_in[t][z][y+trans_y][x+trans_x]
+                else:
+                    for ch in range(n_channel):
+                        for y in range(y_dim):
+                            for x in range(x_dim):
+                                if (x+trans_x < 0) or (y+trans_y < 0):
+                                    continue
+                                elif (x+trans_x >= x_dim) or (y+trans_y >= y_dim):
+                                    continue
+                                else:
+                                    im_out[t][z][ch][y][x] = im_in[t][z][ch][y+trans_y][x+trans_x]
+
+                    
     else:            
         # search for extrema
         x_low, x_high  = 0, x_dim
@@ -78,29 +97,36 @@ def translate(im_in, translation, hi_res = False, compression = 3, padzeros = Tr
             if -trans_y < y_low:
                 y_low = -trans_y
             if y_dim-trans_y > y_high:
-                    y_high = y_dim-trans_y
+                y_high = y_dim-trans_y
             if -trans_x < x_low:
                 x_low = -trans_x
             if x_dim-trans_x > x_high:
-                    x_high = x_dim-trans_x
+                x_high = x_dim-trans_x
         
-
         x_high, x_low, y_high, y_low = int(x_high), int(x_low), int(y_high), int(y_low)
         x_dim_adj, y_dim_adj = x_high-x_low, y_high-y_low
         #create empty tiff
-        im_out = numpy.zeros((n_frame, n_zstep, y_dim_adj, x_dim_adj))
+        if n_channel == 1:
+            im_out = numpy.zeros((n_frame, n_zstep, y_dim_adj, x_dim_adj))
+        else:
+            im_out = numpy.zeros((n_frame, n_zstep, n_channel, y_dim_adj, x_dim_adj))
         # translate
         for t in range(n_frame):
-            if t%20 == 0:
+            if t%10 == 0:
                 print("Start processing t = " + str(t))
             trans_x, trans_y = translation[t]
             for z in range(n_zstep):
-                for y in range(y_dim):
-                    for x in range(x_dim):
-                        im_out[t][z][y-trans_y-y_low][x-trans_x-x_low] = int(im_in[t][z][y][x])
+                if n_channel==1:
+                    for y in range(y_dim):
+                        for x in range(x_dim):
+                            im_out[t][z][y-trans_y-y_low][x-trans_x-x_low] = int(im_in[t][z][y][x])
+                else:
+                    for ch in range(n_channel):
+                        for y in range(y_dim):
+                            for x in range(x_dim):
+                                im_out[t][z][ch][y-trans_y-y_low][x-trans_x-x_low] = int(im_in[t][z][ch][y][x])
                         
     return im_out
-
 
 
 
@@ -123,7 +149,7 @@ def register(tiff_path, trans_mat, highres = False, compress = 3, pad = True):
 
     
     # register using trans_mat
-    im_out = translate(im_in, trans_mat, hi_res = highres, compression = compress, padzeros = pad)
+    im_out = translate(im_in,trans_mat,hi_res=highres,compression=compress,padzeros=pad)
     im_out = im_out.astype('uint16')
     
     # save registered tiff, no compression
@@ -144,31 +170,90 @@ def combine(n_csv = 2):
         counter+=1
     return mat
 
-def super_register(folder, n_roi, high_res = True, compress = 3):
+def super_register(folder,tiff_path='u_germline.tiff',n_roi=2,high_res=True,compress=3):
     os.chdir(folder)
     trans_mat = combine(n_csv = n_roi)
     tiff_path = 'u_germline.tif'
     metadata = register(tiff_path, trans_mat, highres = high_res, compress = compress)
     return metadata   
-    
 
+
+# find the pixel to um conversion using the original tiff
+def findConv(tiff_path):
+    with tifffile.TiffFile(tiff_path) as tif:
+        # read metadata as tif_tags (dict)
+        tif_tags = tif.pages[0].tags
+        found = 0
+        for t in tif_tags.values():
+            if t.name == 'x_resolution':
+                x_resolution = t.value
+                found+=1
+            elif t.name == 'y_resolution':
+                y_resolution = t.value
+                found+=1
+            elif t.name == 'image_description':
+                description = t.value.split()
+                found+=1
+            if found == 3:
+                break
+    for e in description:
+        if e[:8] == b'spacing=':
+            z = float(e[8:])
+            break
+    conversion = {'x': x_resolution[1]/x_resolution[0],
+                  'y': y_resolution[1]/y_resolution[0],
+                  'z': z}   
+    return conversion
+            
+
+        
+        
+def findCroppedDim(tiff_path = 'r_germline.tif'):
+    with tifffile.TiffFile(tiff_path) as tif:
+            # read tiff
+            im_in = tif.asarray()
+            n_frame, n_zstep, y_dim, x_dim = im_in.shape
+            top = 0
+            bottom = y_dim
+            left = 0    
+            right = x_dim
+            
+            for t in range(n_frame):
+                # top border
+                y = 0
+                while im_in[t][0][y][int(x_dim/2)] == 0:
+                    y+=1
+                if top < y:
+                    top = y
+                # bottom border
+                y = y_dim - 1
+                while im_in[t][0][y][int(x_dim/2)] == 0:
+                    y-=1
+                if bottom > y:
+                    bottom = y
+                
+                # left border
+                x = 0
+                while im_in[t][0][int(y_dim/2)][x] == 0:
+                    x+=1
+                if left < x:
+                    left = x
+                # right border
+                x = x_dim - 1
+                while im_in[t][0][int(y_dim/2)][x] == 0:
+                    x-=1
+                if right > x:
+                    right = x
+    return top, bottom, left, right            
+
+    
 if __name__ == "__main__":
-    
     # example usage
-    os.chdir("../data/C2-20191028_test3_25C_s1/")
-
-    # --- step 1: get transformation matrix (2D) ---
-    # if mutiple files, for example, 4 csv, run:
-    trans_mat = combine(n_csv = 4)
-    # if single file, run
-#     ROI = pd.read_csv("ROI.csv", header = None)
-#     trans_mat = roi2mat(ROI)
-#    # --- step 2: get ground truth tiff (low res) ---
-    tiff_path = 'low_res.tif'
-    metadata = register(tiff_path, trans_mat)
-    
-    # --- step 3: get ground truth tiff (high res) ---
-    tiff_path = 'high_res.tif'
-    metadata = register(tiff_path, trans_mat, highres = True, compress = 3)
+    folder = '../data/multichannel/'
+    # register a low res movie with original compression of 3
+    super_register(folder,tiff_path='u_germline_lr.tiff',n_roi=2,high_res=False,compress=3)
+    # register a high res movie with the same matrix
+    hr_tiff_path = 'u_germline_hr.tif'
+    super_register(folder,tiff_path=hr_tiff_path,n_roi=2,high_res=True,compress=3)
     
     
