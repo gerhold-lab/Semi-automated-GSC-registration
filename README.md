@@ -1,4 +1,4 @@
-# Semi-automated registration of GSC (in 5 minutes)
+# Semi-automated registration of GSC
 This document describes the steps to register time-lapse movies of *C. elegans* germline.
 
 #### Materials
@@ -22,7 +22,7 @@ This step is optional but highly recommended to speed up the registration proces
 times to identify such a pair. But it gets very easy with a little practice.
 4. At t = 0, draw a straight line in the middle of the two centrosomes that you identified in the previous step. This line should approximate the metaphase plate (see Figure 2). Then, enter "t" on your keyboard (shortcut for "Add" in ROI manager).
 6. Go to the next time point. If the metaphase plate position changes, move your line accordingly using "->" or "<-" on your keyboard. Enter "t" to add the line. Repeat this step until the last time point is reached.
-7. In the ROI Manager, check "Show All". You should see something similar to Figure 3. Go to "More>>List", and save the x, y coordinates as a csv file. If you have mutiple cells, you should save the csv's in order, as '1.csv', '2.csv', etc.
+7. In the ROI Manager, check "Show All". You should see something similar to Figure 3. Go to "More>>List", and save the result table as a csv file. If you have mutiple cells, you should save the csv's in order, as '1.csv', '2.csv', etc.
 
 **Important Note**: the selection of the congressing centrosome pair is essential. It is ok if the selected pair disappears in the middle of the movie. In that case, you need to save the current ROI result, go to one time point back, and find another prominently congressing pair. The remaining steps are identical.
 
@@ -34,9 +34,40 @@ times to identify such a pair. But it gets very easy with a little practice.
 ### 3 Generate the transformation matrix
 1. Now you have your ROI csv and low-res tiff ready. With your favorite python IDE open, run:
 ```
-from register import superregister
-folder = 'PATH/TO/YOUR/MOVIE/'
-super_register(folder,tiff_path='u_germline_lr.tiff',n_roi=2,high_res=False,compress=3)
+from register import register, combine
+import os
+
+# example usage
+
+# declare path
+folder = '../data/multichannel/'
+hr_tiff = 'germline_hr.tif'
+lr_tiff = 'germline_lr.tiff'
+hr_output = 'r_'+hr_tiff
+lr_output = 'r_'+lr_tiff
+# You can also separate inout and output by giving them full path 
+
+# specify where you put your csv's (can be different from the folder above)
+csv_path = folder
+
+# change working directory  (if you used relative path rather than absolute path)
+os.chdir(folder)
+
+# specify the number of roi ("cell") you saved
+n_roi = 2
+
+# read translation matrix
+trans_mat = combine(csv_path, n_csv = n_roi)
+
+# 1) register a low res movie (if you generated the ROI csv using compressed movie)
+metadata = register(lr_tiff,trans_mat,lr_output,highres = False,compress = 3)
+    
+# 2) register a high res movie with the same matrix
+metadata = register(hr_tiff,trans_mat,hr_output,compress = 3)
+
+# 3) if you used the original movie to generate the ROI csv, set compress=1
+metadata = register(hr_tiff,trans_mat,hr_output)
+
 ```
 
 2. Open the registered low-res tiff. It is now a 2D stack. Go to Image>>Hyperstacks>>stack to hyperstack. In the popup window, enter the number of Slices and Frames of your original movie.
