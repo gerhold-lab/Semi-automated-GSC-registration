@@ -7,7 +7,6 @@ Created on Fri Jan 10 14:39:54 2020
 @description: Register a tiff file using user-provided ROI
 """
 import pandas as pd
-import os
 import numpy
 from skimage.external import tifffile
 
@@ -130,7 +129,7 @@ def translate(im_in,translation,hi_res=False,compression=3,padzeros = True):
 
 
 
-def register(tiff_path, trans_mat, highres = False, compress = 3, pad = True):
+def register(tiff_path, trans_mat, out_tiff_path, highres = False, compress = 3, pad = True):
     '''
     tiff_path: tiff file name
     trans_mat: translation matrix, can be obtained by roi2mat()
@@ -153,28 +152,28 @@ def register(tiff_path, trans_mat, highres = False, compress = 3, pad = True):
     im_out = im_out.astype('uint16')
     
     # save registered tiff, no compression
-    with tifffile.TiffWriter("r_" + tiff_path, bigtiff = highres) as tif:
+    with tifffile.TiffWriter(out_tiff_path, bigtiff = highres) as tif:
         for i in range(im_out.shape[0]):
             tif.save(im_out[i])
     return tif_tags
 
 
-def combine(n_csv = 2):
-    mat = pd.read_csv("1.csv", header = None)
+def combine(csv_path,n_csv = 2):
+    mat = pd.read_csv(csv_path+"1.csv", index_col=0, header=0)
+    mat = mat[['X','Y']]
     mat = roi2mat(mat)
     counter = 2
     while counter<=n_csv:
         nextMat = pd.read_csv(str(counter) + ".csv", header = None)
+        nextMat = nextMat[['X','Y']]
         nextMat = roi2mat(nextMat)
         mat = combine_roi(mat, nextMat)
         counter+=1
     return mat
 
-def super_register(folder,tiff_path='u_germline.tiff',n_roi=2,high_res=True,compress=3):
-    os.chdir(folder)
-    trans_mat = combine(n_csv = n_roi)
-    tiff_path = 'u_germline.tif'
-    metadata = register(tiff_path, trans_mat, highres = high_res, compress = compress)
+def register_w_roi(tiff_path,out_tiff_path, csv_path,n_roi=2,high_res=True,compress=1,pad=True):
+    trans_mat = combine(csv_path, n_csv = n_roi)
+    metadata = register(tiff_path,trans_mat,out_tiff_path,highres = False,compress = 3, pad = True)
     return metadata   
 
 
@@ -204,56 +203,93 @@ def findConv(tiff_path):
                   'y': y_resolution[1]/y_resolution[0],
                   'z': z}   
     return conversion
-            
 
-        
+# find framerate using the original tiff
+def findFrameRate(tiff_path):
+    rate = 1
+    with tifffile.TiffFile(tiff_path) as tif:
+        # read metadata as tif_tags (dict)
+        tif_tags = tif.pages[0].tags
+        for t in tif_tags.values():
+            if t.name == 'image_description':
+                description = t.value.split()
+    for e in description:
+        if e.startswith(b'finterval='):
+            rate = float(e[10:])
+    return rate
+
+
+         
         
 def findCroppedDim(tiff_path = 'r_germline.tif'):
     with tifffile.TiffFile(tiff_path) as tif:
             # read tiff
             im_in = tif.asarray()
-            n_frame, n_zstep, y_dim, x_dim = im_in.shape
+            if len(im_in.shape) == 4:
+                n_frame, n_zstep, y_dim, x_dim = im_in.shape
+            else: 
+                n_frame, n_zstep, n_channel, y_dim, x_dim = im_in.shape
             top = 0
             bottom = y_dim
             left = 0    
             right = x_dim
-            
-            for t in range(n_frame):
-                # top border
-                y = 0
-                while im_in[t][0][y][int(x_dim/2)] == 0:
-                    y+=1
-                if top < y:
-                    top = y
-                # bottom border
-                y = y_dim - 1
-                while im_in[t][0][y][int(x_dim/2)] == 0:
-                    y-=1
-                if bottom > y:
-                    bottom = y
-                
-                # left border
-                x = 0
-                while im_in[t][0][int(y_dim/2)][x] == 0:
-                    x+=1
-                if left < x:
-                    left = x
-                # right border
-                x = x_dim - 1
-                while im_in[t][0][int(y_dim/2)][x] == 0:
-                    x-=1
-                if right > x:
-                    right = x
+            if len(im_in.shape) == 4:
+                for t in range(n_frame):
+                    # top border
+                    y = 0
+                    while im_in[t][0][y][int(x_dim/2)] == 0:
+                        y+=1
+                    if top < y:
+                        top = y
+                    # bottom border
+                    y = y_dim - 1
+                    while im_in[t][0][y][int(x_dim/2)] == 0:
+                        y-=1
+                    if bottom > y:
+                        bottom = y
+                    
+                    # left border
+                    x = 0
+                    while im_in[t][0][int(y_dim/2)][x] == 0:
+                        x+=1
+                    if left < x:
+                        left = x
+                    # right border
+                    x = x_dim - 1
+                    while im_in[t][0][int(y_dim/2)][x] == 0:
+                        x-=1
+                    if right > x:
+                        right = x
+            else:
+                for t in range(n_frame):
+                    # top border
+                    y = 0
+                    while im_in[t][0][0][y][int(x_dim/2)] == 0:
+                        y+=1
+                    if top < y:
+                        top = y
+                    # bottom border
+                    y = y_dim - 1
+                    while im_in[t][0][0][y][int(x_dim/2)] == 0:
+                        y-=1
+                    if bottom > y:
+                        bottom = y
+                    
+                    # left border
+                    x = 0
+                    while im_in[t][0][0][int(y_dim/2)][x] == 0:
+                        x+=1
+                    if left < x:
+                        left = x
+                    # right border
+                    x = x_dim - 1
+                    while im_in[t][0][0][int(y_dim/2)][x] == 0:
+                        x-=1
+                    if right > x:
+                        right = x
+                         
+                    
     return top, bottom, left, right            
 
-    
-if __name__ == "__main__":
-    # example usage
-    folder = '../data/multichannel/'
-    # register a low res movie with original compression of 3
-    super_register(folder,tiff_path='u_germline_lr.tiff',n_roi=2,high_res=False,compress=3)
-    # register a high res movie with the same matrix
-    hr_tiff_path = 'u_germline_hr.tif'
-    super_register(folder,tiff_path=hr_tiff_path,n_roi=2,high_res=True,compress=3)
     
     
